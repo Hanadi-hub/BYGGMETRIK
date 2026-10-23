@@ -91,7 +91,7 @@ elif page == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
     st.subheader("📁 Bidcon Import & QA")
     uploaded = st.file_uploader("Ladda upp Bidcon-filer (Excel .xlsx)", accept_multiple_files=True)
     if uploaded is not None:
-        if uploaded:
+if uploaded:
     if isinstance(uploaded, list):
         dfs = [pd.read_excel(f) for f in uploaded]
         df_imported = pd.concat(dfs, ignore_index=True)
