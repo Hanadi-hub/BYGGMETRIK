@@ -46,7 +46,7 @@ elif menu == "2. START & INSTÄLLNINGAR":
 # 3. RAW_NETTOKALKYL & BIDCON_IMPORT (رفع ومعالجة الملفات)
 elif menu == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
     st.header("📁 Bidcon Import & QA")
-    st.markdown("Ladda upp och sammanfoga dina Bidcon-filer (.xlsx eller .csv).")
+    st.markdown("Ladda upp och sammanfoga dina Bidcon-filer (.csv eller .xlsx).")
     
     uploaded = st.file_uploader("Ladda upp Bidcon-filer", accept_multiple_files=True, type=["csv", "xlsx"])
 
@@ -55,12 +55,16 @@ elif menu == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
         for f in uploaded:
             try:
                 if f.name.endswith('.csv'):
-                    df = pd.read_csv(f)
+                    # قراءة ملفات CSV السويدية بالفاصلة المنقوطة والترميز المتوافق
+                    try:
+                        df = pd.read_csv(f, sep=';', encoding='latin1')
+                    except:
+                        df = pd.read_csv(f)
                 else:
                     df = pd.read_excel(f)
                 dfs.append(df)
             except Exception as e:
-                st.warning(f"Kunde inte läsa filen {f.name} direkt. Ladda gärna upp den som CSV.")
+                st.warning(f"Kunde inte läsa filen {f.name}. Kontrollera filformatet.")
         
         if dfs:
             df_imported = pd.concat(dfs, ignore_index=True)
