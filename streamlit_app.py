@@ -89,7 +89,7 @@ elif page == "2. START & INSTÄLLNINGAR":
 
 elif page == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
     st.subheader("📁 Bidcon Import & QA")
-    uploaded = st.file_uploader("Ladda upp Bidcon-fil (Excel .xlsx)", type=["xlsx"])
+    uploaded = st.file_uploader("Ladda upp Bidcon-filer (Excel .xlsx)", accept_multiple_files=True)
     if uploaded is not None:
         df_imported = pd.read_excel(uploaded)
         st.success("Bidcon-data har importerats och länkats automatiskt! 🚀")
