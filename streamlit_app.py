@@ -23,12 +23,19 @@ if menu == "1. OMSLAG":
     
     st.subheader("Projektinformation (Projektdata)")
     
-    # Projektdatafält
+    # حقول إدخال بيانات المشروع الدقيقة
     project_name = st.text_input("Projektnamn", "Exempelprojekt Malmö")
-    project_manager = st.text_input("Projektledare", "Eng. Hanadi Taki")
-    project_budget = st.number_input("Projektbudget (SEK)", value=1000000, step=50000)
+    project_type = st.selectbox("Projekttyp / Verksamhetstyp", [
+        "Skola / Förskola",
+        "Bostäder",
+        "Kontor",
+        "Vårdbyggnad",
+        "Idrottsanläggning",
+        "Övrigt"
+    ])
+    bta_area = st.number_input("BTA - Bruttoarea (m²)", value=1000.0, step=50.0)
     
-    st.success(f"Vald projektinformation har sparats för: {project_name}")
+    st.success(f"Projektdata sparad: {project_name} | Typ: {project_type} | BTA: {bta_area} m²")
 
 elif menu == "2. START & INSTÄLLNINGAR":
     st.header("⚙️ START & INSTÄLLNINGAR")
@@ -65,6 +72,6 @@ elif menu == "6. LCA_RESULTAT":
     st.header("🌍 LCA_RESULTAT")
     st.markdown("Klimatpåverkan och livscykelanalysresultat (LCA).")
 
-# التوقيع الرسمي للمهندسة هادي في أسفل كل الصفحات
+# التوقيع الرسمي في أسفل الصفحة
 st.markdown("---")
 st.markdown("<p style='text-align: center; color: gray;'>BYGGMETRIK Executive 2026 🏢 Malmö Stad | Developed by <b>Eng. Hanadi Taki</b></p>", unsafe_allow_html=True)
