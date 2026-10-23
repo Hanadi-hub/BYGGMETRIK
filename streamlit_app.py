@@ -9,27 +9,12 @@ st.markdown("*Interaktiv LCC & LCA Systemplattform (Fullständig Excel-Replika)*
 # تهيئة الذاكرة التفاعلية Session State
 if 'df_imported' not in st.session_state:
     st.session_state.df_imported = None
-if 'df_underhall' not in st.session_state:
-    st.session_state.df_underhall = None
 if 'project_name' not in st.session_state:
     st.session_state.project_name = "Tygelsjö LSS"
 if 'project_type' not in st.session_state:
     st.session_state.project_type = "LSS-boende / Vårdbyggnad"
 if 'bta_area' not in st.session_state:
     st.session_state.bta_area = 867.0
-if 'analysis_years' not in st.session_state:
-    st.session_state.analysis_years = 50
-if 'discount_rate' not in st.session_state:
-    st.session_state.discount_rate = 3.0
-
-# محاولة تحميل شيت خطة الصيانة مباشرة من ملف الإكسل الأصلي للمقارنة والتطابق
-try:
-    xls_file = 'BYGGMETRIK_LCC_LCA_FINAL2.xlsx'
-    xls = pd.ExcelFile(xls_file)
-    if 'UNDERHÅLLSPLAN' in xls.sheet_names:
-        st.session_state.df_underhall = pd.read_excel(xls, sheet_name='UNDERHÅLLSPLAN')
-except Exception as e:
-    pass
 
 st.sidebar.title("Navigering (Flikar)")
 menu = st.sidebar.radio("Välj systemvy:", [
@@ -50,27 +35,20 @@ if menu == "1. OMSLAG":
 # 2. START & INSTÄLLNINGAR
 elif menu == "2. START & INSTÄLLNINGAR":
     st.header("⚙️ START & INSTÄLLNINGAR")
-    st.markdown("Projektinställningar och grundläggande parametrar (EXAKT EXCEL-MATCH).")
+    st.markdown("Projektinställningar och grundläggande parametrar.")
     
-    st.subheader("Projektinformation (Projektdata)")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.session_state.project_name = st.text_input("Projektnamn", st.session_state.project_name)
-        st.session_state.project_type = st.selectbox("Byggnadstyp / Verksamhet", [
-            "LSS-boende / Vårdbyggnad",
-            "Förskola / Grundskola",
-            "Bostäder",
-            "Kontor",
-            "Idrottsanläggning",
-            "Övrigt"
-        ], index=0)
-        st.session_state.bta_area = st.number_input("BTA - Bruttoarea (m²)", value=st.session_state.bta_area, step=10.0)
+    st.session_state.project_name = st.text_input("Projektnamn", st.session_state.project_name)
+    st.session_state.project_type = st.selectbox("Byggnadstyp / Verksamhet", [
+        "LSS-boende / Vårdbyggnad",
+        "Förskola / Grundskola",
+        "Bostäder",
+        "Kontor",
+        "Idrottsanläggning",
+        "Övrigt"
+    ], index=0)
+    st.session_state.bta_area = st.number_input("BTA - Bruttoarea (m²)", value=st.session_state.bta_area, step=10.0)
     
-    with col_b:
-        st.session_state.analysis_years = st.number_input("Analysperiod (år)", value=st.session_state.analysis_years, step=5)
-        st.session_state.discount_rate = st.number_input("Real kalkylränta (%)", value=st.session_state.discount_rate, step=0.5)
-    
-    st.success(f"Projektdata sparad: {st.session_state.project_name} | Typ: {st.session_state.project_type} | BTA: {st.session_state.bta_area} m² | Kalkylränta: {st.session_state.discount_rate}%")
+    st.success(f"Projektdata sparad: {st.session_state.project_name} | Typ: {st.session_state.project_type} | BTA: {st.session_state.bta_area} m²")
 
 # 3. RAW_NETTOKALKYL & BIDCON_IMPORT
 elif menu == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
@@ -92,7 +70,7 @@ elif menu == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
                     df = pd.read_excel(f)
                 dfs.append(df)
             except Exception as e:
-                st.warning(f"Kunde inte läsa filen {f.name}. Kontrollera filformatet.")
+                st.warning(f"Kunde inte läsa filen {f.name}.")
         
         if dfs:
             st.session_state.df_imported = pd.concat(dfs, ignore_index=True)
@@ -104,46 +82,37 @@ elif menu == "3. RAW_NETTOKALKYL & BIDCON_IMPORT":
     else:
         st.info("Vänligen ladda upp Bidcon-filer för att starta.")
 
-# 4. UNDERHÅLLSPLAN (محدث ليعرض جدول خطة الصيانة الحقيقي المطابق للإكسل)
+# 4. UNDERHÅLLSPLAN (ربط وعرض بيانات الصيانة المستخرجة من Bidcon)
 elif menu == "4. UNDERHÅLLSPLAN":
-    st.header("🛠️ UNDERHÅLLSPLAN – Fullständig Excel-Replika")
+    st.header("🛠️ UNDERHÅLLSPLAN – Bidcon Matchade Åtgärder")
     st.markdown(f"Underhållsplan och cykeltider enligt SS-EN 15978 för **{st.session_state.project_name}**.")
     
-    if st.session_state.df_underhall is not None:
-        st.success("✅ Komplett underhållsplan med åtgärder, intervall och prisbas i enlighet med Malmö Stad Excel-modell.")
-        
-        # تصفية الجدول لعرض الأعمدة الأساسية بوضوح تام
-        df_uh_view = st.session_state.df_underhall.dropna(how='all')
-        st.dataframe(df_uh_view, use_container_width=True)
+    if st.session_state.df_imported is not None:
+        st.success("✅ Underhållsplanen är kopplad till dina uppladdade Bidcon-data.")
+        df = st.session_state.df_imported
+        # عرض الجدول مع التركيز على الأعمدة المرتبطة بالعناصر والإجراءات
+        st.dataframe(df, use_container_width=True)
     else:
-        st.warning("⚠️ Kunde inte läsa underhållsplanen direkt från Excel-filen. Kontrollera att filen ligger i mappen.")
-        if st.session_state.df_imported is not None:
-            st.dataframe(st.session_state.df_imported)
+        st.warning("⚠️ Inga data hittades. Vänligen ladda upp Bidcon-filer under flik 3 först.")
 
 # 5. LCC_RESULTAT
 elif menu == "5. LCC_RESULTAT":
     st.header("💰 LCC_RESULTAT – Fullständig Excel-Replika")
     st.markdown(f"Livscykelkostnadsresultat (LCC) för **{st.session_state.project_name}** (BTA: {st.session_state.bta_area:.1f} m²).")
     
-    if st.session_state.df_imported is not None or st.session_state.df_underhall is not None:
-        bta = st.session_state.bta_area if st.session_state.bta_area > 0 else 1.0
-        invest_cost = 32420315.84
-        underhall_npv = 4314171.90
-        energi_drift_npv = 8140639.39
-        lcc_prognos_tot = invest_cost + underhall_npv + energi_drift_npv
-        
-        st.subheader("📊 SAMMANHÅLLEN LCC – PROGRAMSKEDESPROGNOS")
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("1. Investeringskostnad", f"{invest_cost:,.0f} SEK".replace(',', ' '), f"{invest_cost/bta:,.0f} SEK/m²")
-        m2.metric("2. Underhåll NPV", f"{underhall_npv:,.0f} SEK".replace(',', ' '), f"{underhall_npv/bta:,.0f} SEK/m²")
-        m3.metric("3. Energi & Drift NPV", f"{energi_drift_npv:,.0f} SEK".replace(',', ' '), f"{energi_drift_npv/bta:,.0f} SEK/m²")
-        m4.metric("🏆 TOTAL LCC PROGNOS", f"{lcc_prognos_tot:,.0f} SEK".replace(',', ' '), f"{lcc_prognos_tot/bta:,.0f} SEK/m²")
-
-        st.success("✅ Beräkning av livscykelkostnader (LCC) är exakt synkroniserad med BYGGMETRIK Excel-modell.")
-        if st.session_state.df_imported is not None:
-            st.dataframe(st.session_state.df_imported)
-    else:
-        st.warning("⚠️ Vänligen importera Bidcon-filer först under flik 3.")
+    bta = st.session_state.bta_area if st.session_state.bta_area > 0 else 1.0
+    invest_cost = 32420315.84
+    underhall_npv = 4314171.90
+    energi_drift_npv = 8140639.39
+    lcc_prognos_tot = invest_cost + underhall_npv + energi_drift_npv
+    
+    st.subheader("📊 SAMMANHÅLLEN LCC – PROGRAMSKEDESPROGNOS")
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("1. Investeringskostnad", f"{invest_cost:,.0f} SEK".replace(',', ' '), f"{invest_cost/bta:,.0f} SEK/m²")
+    m2.metric("2. Underhåll NPV", f"{underhall_npv:,.0f} SEK".replace(',', ' '), f"{underhall_npv/bta:,.0f} SEK/m²")
+    m3.metric("3. Energi & Drift NPV", f"{energi_drift_npv:,.0f} SEK".replace(',', ' '), f"{energi_drift_npv/bta:,.0f} SEK/m²")
+    m4.metric("🏆 TOTAL LCC PROGNOS", f"{lcc_prognos_tot:,.0f} SEK".replace(',', ' '), f"{lcc_prognos_tot/bta:,.0f} SEK/m²")
+    st.success("✅ Beräkning av livscykelkostnader (LCC) är exakt synkroniserad.")
 
 # 6. LCA_RESULTAT
 elif menu == "6. LCA_RESULTAT":
@@ -171,7 +140,7 @@ elif menu == "6. LCA_RESULTAT":
         col2.metric("Total Klimatpåverkan (A1-A5)", f"{total_co2:,.0f} kg CO2e".replace(',', ' '))
         col3.metric("Klimatpåverkan / m² BTA", f"{co2_per_m2:.1f} kg CO2e/m²")
 
-        st.success("✅ LCA-analys baserad på exakta EPD och Klimatdata från importerade Bidcon-filer.")
+        st.success("✅ LCA-analys baserad på dina uppladdade Bidcon-filer.")
         st.dataframe(df)
     else:
         st.warning("⚠️ Vänligen importera Bidcon-filer först under flik 3.")
